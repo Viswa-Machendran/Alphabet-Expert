@@ -3,160 +3,678 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Alphabet Championship Trainer</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet"/>
+<title>Alphabet Championship Trainer by VISH</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #020617;
-    --surface: #0f172a;
-    --surface2: #1e293b;
-    --green: #22c55e;
-    --blue: #38bdf8;
-    --purple: #c084fc;
-    --orange: #fb923c;
-    --red: #ef4444;
-    --yellow: #facc15;
-    --text: #e2e8f0;
-    --muted: #64748b;
-  }
+:root {
+  --bg: #04060f;
+  --bg2: #080d1a;
+  --surface: #0d1424;
+  --surface2: #141e33;
+  --surface3: #1a2640;
+  --border: #1f2e4a;
+  --green: #00e5a0;
+  --blue: #3b9eff;
+  --cyan: #00cfff;
+  --gold: #ffc947;
+  --red: #ff4757;
+  --purple: #a855f7;
+  --text: #d8e4f0;
+  --muted: #4a6080;
+  --dim: #2a3a55;
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Rank colors */
+  --r-iron:     #6b7280;
+  --r-bronze:   #cd7f32;
+  --r-silver:   #94a3b8;
+  --r-gold:     #fbbf24;
+  --r-plat:     #38bdf8;
+  --r-diamond:  #a78bfa;
+  --r-master:   #f472b6;
+  --r-legend:   #ff6b35;
+  --r-champ:    #ffd700;
+}
 
-  body {
-    font-family: 'Exo 2', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 24px 16px;
-  }
+*{box-sizing:border-box;margin:0;padding:0}
 
-  #app { width: 100%; max-width: 640px; }
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 20px 16px 40px;
+  position: relative;
+  overflow-x: hidden;
+}
 
-  header { text-align: center; margin-bottom: 20px; }
-  header h1 { font-family: 'Orbitron', sans-serif; font-size: 16px; letter-spacing: 4px; color: var(--blue); margin-bottom: 4px; }
-  header p { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+/* Animated background grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59,158,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,158,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
 
-  .modeBar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  .modeBtn {
-    padding: 8px 18px; border-radius: 10px; border: 1px solid var(--surface2);
-    background: var(--surface); color: var(--muted); cursor: pointer;
-    font-weight: 600; font-family: 'Exo 2', sans-serif; font-size: 14px; transition: all .2s;
-  }
-  .modeBtn:hover:not(.locked) { border-color: var(--blue); color: var(--text); }
-  .modeBtn.active { background: var(--surface2); border-color: var(--green); color: var(--green); }
-  .modeBtn.locked { opacity: .35; cursor: not-allowed; }
+#app {
+  width: 100%;
+  max-width: 660px;
+  position: relative;
+  z-index: 1;
+}
 
-  #gameArea {
-    background: var(--surface); border-radius: 16px;
-    padding: 28px; text-align: center; border: 1px solid var(--surface2);
-    margin-bottom: 14px;
-  }
-  .indicator { height: 26px; font-size: 13px; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
-  .indicator.pos { color: var(--blue); }
-  .indicator.pair { color: var(--purple); }
-  .indicator.math { color: var(--orange); }
+/* ── HEADER ── */
+header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.header-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 5px;
+  background: linear-gradient(135deg, var(--cyan), var(--blue), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+.header-sub {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
 
-  #q { font-family: 'Orbitron', sans-serif; font-size: 130px; font-weight: 900; line-height: 1; margin: 10px 0; }
+/* ── RANK BADGE (live) ── */
+#rankBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 6px 16px 6px 10px;
+  margin-top: 12px;
+  transition: all .4s;
+}
+#rankIcon { font-size: 20px; }
+#rankLabel {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  transition: color .4s;
+}
+#rankSub { font-size: 11px; color: var(--muted); }
 
-  #answer {
-    padding: 14px 20px; font-size: 26px; width: 200px; text-align: center;
-    border-radius: 12px; border: 2px solid var(--surface2); background: var(--bg);
-    color: var(--text); font-family: 'Orbitron', sans-serif; letter-spacing: 4px;
-    transition: border-color .2s;
-  }
-  #answer:focus { outline: none; border-color: var(--blue); }
+/* ── MODE BAR ── */
+.modeBar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.modeBtn {
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+  transition: all .2s;
+  text-align: center;
+}
+.modeBtn:hover:not(.locked) { border-color: var(--blue); color: var(--text); background: var(--surface2); }
+.modeBtn.active { background: var(--surface2); border-color: var(--cyan); color: var(--cyan); }
+.modeBtn.locked { opacity: .3; cursor: not-allowed; }
 
-  .btnRow { display: flex; justify-content: center; gap: 10px; margin-top: 16px; }
-  .btn-start {
-    padding: 13px 32px; font-size: 16px; cursor: pointer; border-radius: 12px;
-    border: none; background: var(--green); color: #000; font-weight: 700;
-    font-family: 'Orbitron', sans-serif; letter-spacing: 2px; transition: opacity .2s;
-  }
-  .btn-start:hover { opacity: .85; }
-  .btn-quit {
-    padding: 13px 20px; font-size: 14px; cursor: pointer; border-radius: 12px;
-    border: none; background: var(--red); color: #fff; font-weight: 700;
-    font-family: 'Exo 2', sans-serif;
-  }
+/* ── GAME AREA ── */
+#gameArea {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+  border: 1px solid var(--border);
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+}
+#gameArea::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 20%; right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: .6;
+}
 
-  .bar { height: 8px; background: var(--surface2); border-radius: 20px; overflow: hidden; margin-top: 16px; }
-  .fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--blue), var(--green)); transition: width .3s; }
+.indicator {
+  height: 24px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.indicator.pos  { color: var(--blue); }
+.indicator.pair { color: var(--purple); }
+.indicator.math { color: var(--gold); }
 
-  .statsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
-  .statCard { background: var(--surface2); border-radius: 10px; padding: 10px 8px; text-align: center; }
-  .statCard .val { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: var(--yellow); }
-  .statCard .lbl { font-size: 11px; color: var(--muted); margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+#q {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 120px;
+  font-weight: 900;
+  line-height: 1;
+  margin: 8px 0 16px;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(0,207,255,0.3);
+  transition: color .15s;
+}
 
-  #comboDisp { font-family: 'Orbitron', sans-serif; font-size: 20px; color: var(--green); font-weight: 900; text-align: center; min-height: 28px; margin-top: 10px; }
-  #reportDisp { text-align: center; margin-top: 8px; color: var(--purple); font-weight: 600; min-height: 20px; font-size: 14px; }
+#answer {
+  padding: 13px 20px;
+  font-size: 24px;
+  width: 180px;
+  text-align: center;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--bg2);
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 4px;
+  transition: border-color .2s, box-shadow .2s;
+}
+#answer:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,207,255,0.12); }
+#answer:disabled { opacity: .3; }
 
-  #bestSection { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--surface2); }
-  #bestSection h3 { font-family: 'Orbitron', sans-serif; font-size: 13px; letter-spacing: 3px; color: var(--yellow); margin-bottom: 14px; }
-  .bestGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .bestCard { background: var(--surface2); border-radius: 10px; padding: 12px 8px; text-align: center; }
-  .bestCard .val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: var(--green); }
-  .bestCard .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
-  #noGames { color: var(--muted); font-size: 13px; text-align: center; padding: 10px; }
+/* ── REACTION TIME BAR ── */
+.rt-bar-wrap { margin: 14px 0 4px; height: 4px; background: var(--surface3); border-radius: 4px; overflow: hidden; }
+#rtBar { height: 100%; width: 100%; background: var(--green); border-radius: 4px; transition: width .05s linear, background .3s; }
+#rtLabel { font-size: 11px; color: var(--muted); text-align: right; margin-bottom: 8px; height: 14px; }
 
-  .shake { animation: shake .3s; }
-  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-10px)} 40%{transform:translateX(10px)} 60%{transform:translateX(-8px)} 80%{transform:translateX(6px)} }
-  .flashWrong { animation: flashWrong .25s; }
-  @keyframes flashWrong { 0%{background:var(--bg)} 50%{background:#3b0a0a} 100%{background:var(--bg)} }
+.btnRow { display: flex; justify-content: center; gap: 10px; margin-top: 4px; }
+.btn-start {
+  padding: 13px 36px; font-size: 15px; cursor: pointer; border-radius: 12px;
+  border: none; background: linear-gradient(135deg, #00e5a0, #00cfff);
+  color: #000; font-weight: 700; font-family: 'Orbitron', sans-serif;
+  letter-spacing: 2px; transition: opacity .2s, transform .1s;
+}
+.btn-start:hover { opacity: .9; transform: translateY(-1px); }
+.btn-start:active { transform: translateY(0); }
+.btn-quit {
+  padding: 13px 20px; font-size: 13px; cursor: pointer; border-radius: 12px;
+  border: 1px solid var(--red); background: transparent; color: var(--red);
+  font-weight: 700; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;
+  transition: background .2s;
+}
+.btn-quit:hover { background: rgba(255,71,87,0.1); }
+
+/* ── PROGRESS BAR ── */
+.prog-wrap { margin-top: 16px; }
+.prog-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+.bar { height: 6px; background: var(--surface3); border-radius: 20px; overflow: hidden; }
+.fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--blue), var(--cyan), var(--green)); transition: width .3s; }
+
+/* ── LIVE STATS ── */
+.statsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+.statCard {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+  transition: border-color .3s;
+}
+.statCard .val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.statCard .lbl { font-size: 10px; color: var(--muted); margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+
+#comboDisp {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px; color: var(--green);
+  font-weight: 900; text-align: center;
+  min-height: 26px; margin-top: 10px;
+  letter-spacing: 2px;
+}
+#reportDisp {
+  text-align: center; margin-top: 6px;
+  font-weight: 600; min-height: 18px;
+  font-size: 13px; color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* ── SESSION BEST ── */
+#bestSection {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--muted);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+#noGames { color: var(--muted); font-size: 13px; text-align: center; padding: 16px; letter-spacing: 1px; }
+
+.bestGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bestCard {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .3s;
+}
+.bestCard.highlight { border-color: var(--cyan); }
+.bestCard.highlight::before {
+  content: '▲ NEW';
+  position: absolute;
+  top: 5px; right: 6px;
+  font-size: 9px;
+  color: var(--cyan);
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 1px;
+}
+.bestCard .bval {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green);
+  line-height: 1;
+}
+.bestCard .blbl {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── RANK TABLE ── */
+#rankSection {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid var(--border);
+}
+.rankTable { width: 100%; border-collapse: collapse; }
+.rankTable td {
+  padding: 7px 10px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.rankTable tr:last-child td { border-bottom: none; }
+.rankTable td:first-child { width: 32px; font-size: 18px; text-align: center; }
+.rank-name { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
+.rank-req { color: var(--muted); font-size: 12px; }
+.rank-score { font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--dim); text-align: right; }
+.rankTable tr.current-rank { background: var(--surface2); }
+.rankTable tr.current-rank td:first-child::after { content: ' ◀'; font-size: 10px; color: var(--cyan); }
+
+/* ── RESULT OVERLAY ── */
+#resultOverlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(4,6,15,0.92);
+  z-index: 100;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn .3s;
+}
+#resultOverlay.show { display: flex; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.resultBox {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 36px 32px;
+  text-align: center;
+  width: 360px;
+  max-width: 95vw;
+  position: relative;
+  overflow: hidden;
+}
+.resultBox::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 10%; right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.result-rank-icon { font-size: 64px; margin-bottom: 8px; animation: popIn .4s cubic-bezier(.175,.885,.32,1.275); }
+@keyframes popIn { from{transform:scale(0) rotate(-20deg)} to{transform:scale(1) rotate(0)} }
+.result-rank-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+}
+.result-rank-sub { font-size: 13px; color: var(--muted); letter-spacing: 2px; margin-bottom: 20px; }
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.rs-card { background: var(--surface2); border-radius: 10px; padding: 10px 6px; }
+.rs-val { font-family: 'Orbitron', sans-serif; font-size: 17px; font-weight: 700; color: var(--gold); }
+.rs-lbl { font-size: 10px; color: var(--muted); margin-top: 3px; letter-spacing: 1px; }
+
+.result-rp {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.rp-val { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 900; color: var(--cyan); }
+.rp-label { margin-top: 2px; }
+
+.btn-continue {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #00e5a0, #00cfff);
+  color: #000;
+  font-weight: 700;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.btn-continue:hover { opacity: .9; }
+
+/* ── ANIMATIONS ── */
+.shake { animation: shake .3s; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-10px)}
+  40%{transform:translateX(10px)}
+  60%{transform:translateX(-8px)}
+  80%{transform:translateX(6px)}
+}
+.flash-wrong { animation: flashWrong .3s; }
+@keyframes flashWrong {
+  0%{background:var(--surface)}
+  40%{background:#2a0a12}
+  100%{background:var(--surface)}
+}
+.flash-right { animation: flashRight .2s; }
+@keyframes flashRight {
+  0%{color:#fff}
+  50%{color:var(--green)}
+  100%{color:#fff}
+}
 </style>
 </head>
 <body>
 <div id="app">
 
   <header>
-    <h1>ALPHABET CHAMPIONSHIP</h1>
-    <p>SESSION ONLY · CLEARS ON REFRESH</p>
+    <div class="header-title">ALPHABET CHAMPIONSHIP</div>
+    <div class="header-sub">Reaction · Accuracy · Speed</div>
+    <div id="rankBadge">
+      <span id="rankIcon">🔘</span>
+      <div>
+        <div id="rankLabel" style="color:var(--r-iron)">UNRANKED</div>
+        <div id="rankSub">Play to earn your rank</div>
+      </div>
+    </div>
   </header>
 
   <div class="modeBar">
-    <button class="modeBtn active" onclick="setMode('pos',this)">🔢 Position</button>
-    <button class="modeBtn" onclick="setMode('pair',this)">🔁 Pair</button>
-    <button class="modeBtn" onclick="setMode('math',this)">➕ Math</button>
-    <button class="modeBtn" onclick="setMode('mixed',this)">🎲 Mixed</button>
+    <button class="modeBtn active" onclick="setMode('pos',this)">🔢 POSITION</button>
+    <button class="modeBtn" onclick="setMode('pair',this)">🔁 PAIR</button>
+    <button class="modeBtn" onclick="setMode('math',this)">➕ MATH</button>
+    <button class="modeBtn" onclick="setMode('mixed',this)">🎲 MIXED</button>
   </div>
 
   <div id="gameArea">
     <div class="indicator" id="indicator"></div>
     <div id="q">—</div>
     <input id="answer" disabled autocomplete="off" placeholder="?"/>
+
+    <div class="rt-bar-wrap"><div id="rtBar"></div></div>
+    <div id="rtLabel"></div>
+
     <div class="btnRow">
       <button class="btn-start" id="startBtn" onclick="startGame()">▶ START</button>
       <button class="btn-quit" id="quitBtn" onclick="quitGame()" style="display:none">✕ QUIT</button>
     </div>
-    <div class="bar"><div class="fill" id="fill"></div></div>
+
+    <div class="prog-wrap">
+      <div class="prog-top">
+        <span id="progLabel">0 / 26</span>
+        <span id="progPct">0%</span>
+      </div>
+      <div class="bar"><div class="fill" id="fill"></div></div>
+    </div>
+
     <div class="statsGrid">
-      <div class="statCard"><div class="val" id="statScore">0</div><div class="lbl">Score</div></div>
+      <div class="statCard"><div class="val" id="statScore">—</div><div class="lbl">Score</div></div>
       <div class="statCard"><div class="val" id="statAcc">—</div><div class="lbl">Accuracy</div></div>
-      <div class="statCard"><div class="val" id="statFirst">—</div><div class="lbl">1st-Try%</div></div>
-      <div class="statCard"><div class="val" id="statRank">—</div><div class="lbl">Rank</div></div>
+      <div class="statCard"><div class="val" id="statFirst">—</div><div class="lbl">1st Try</div></div>
+      <div class="statCard"><div class="val" id="statTime">—</div><div class="lbl">Time</div></div>
     </div>
     <div id="comboDisp"></div>
     <div id="reportDisp"></div>
   </div>
 
+  <!-- SESSION BEST -->
   <div id="bestSection">
-    <h3>⚡ SESSION BEST</h3>
-    <div id="bestContainer"><div id="noGames">Play a game to set your best!</div></div>
+    <div class="section-title">⚡ Session Best</div>
+    <div id="bestContainer"><div id="noGames">Complete a game to set your personal best</div></div>
+  </div>
+
+  <!-- RANK TABLE -->
+  <div id="rankSection">
+    <div class="section-title">🏅 Rank Requirements</div>
+    <table class="rankTable" id="rankTable">
+      <tbody id="rankTableBody"></tbody>
+    </table>
+    <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;letter-spacing:1px">
+      RANK POINTS = (ACCURACY% × 1.5) + (FIRST-TRY% × 1.0) − (TIME_SECONDS × 0.4)
+    </div>
   </div>
 
 </div>
-<script>
-// Session memory — all gone on refresh
-let sessionBest = { score: 0, time: null, accuracy: null, firstTry: null, maxCombo: 0, games: 0 };
 
+<!-- RESULT OVERLAY -->
+<div id="resultOverlay">
+  <div class="resultBox">
+    <div class="result-rank-icon" id="resIcon">🏅</div>
+    <div class="result-rank-name" id="resName">—</div>
+    <div class="result-rank-sub" id="resSub">—</div>
+    <div class="result-rp">
+      <div class="rp-val" id="resRP">—</div>
+      <div class="rp-label">RANK POINTS</div>
+    </div>
+    <div class="result-stats">
+      <div class="rs-card"><div class="rs-val" id="resAcc">—</div><div class="rs-lbl">Accuracy</div></div>
+      <div class="rs-card"><div class="rs-val" id="resFirst">—</div><div class="rs-lbl">1st Try%</div></div>
+      <div class="rs-card"><div class="rs-val" id="resTime">—</div><div class="rs-lbl">Time</div></div>
+      <div class="rs-card"><div class="rs-val" id="resScore">—</div><div class="rs-lbl">Score</div></div>
+      <div class="rs-card"><div class="rs-val" id="resCombo">—</div><div class="rs-lbl">Max Combo</div></div>
+      <div class="rs-card"><div class="rs-val" id="resBest">—</div><div class="rs-lbl">Best RP</div></div>
+    </div>
+    <button class="btn-continue" onclick="closeResult()">▶ CONTINUE</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// RANK SYSTEM
+// Rank Points (RP) = (acc% * 1.5) + (firstTry% * 1.0) - (timeSec * 0.4)
+// ══════════════════════════════════════════════
+const RANKS = [
+  { id:'iron',    icon:'🔘', name:'IRON',     color:'var(--r-iron)',    minRP:-999, req:'Just start playing' },
+  { id:'bronze',  icon:'🟫', name:'BRONZE',   color:'var(--r-bronze)',  minRP:120,  req:'RP ≥ 120' },
+  { id:'silver',  icon:'⬜', name:'SILVER',   color:'var(--r-silver)',  minRP:180,  req:'RP ≥ 180' },
+  { id:'gold',    icon:'🟨', name:'GOLD',     color:'var(--r-gold)',    minRP:230,  req:'RP ≥ 230' },
+  { id:'plat',    icon:'🔷', name:'PLATINUM', color:'var(--r-plat)',    minRP:270,  req:'RP ≥ 270' },
+  { id:'diamond', icon:'💎', name:'DIAMOND',  color:'var(--r-diamond)', minRP:300,  req:'RP ≥ 300' },
+  { id:'master',  icon:'🔮', name:'MASTER',   color:'var(--r-master)',  minRP:320,  req:'RP ≥ 320' },
+  { id:'legend',  icon:'🔥', name:'LEGEND',   color:'var(--r-legend)',  minRP:340,  req:'RP ≥ 340' },
+  { id:'champ',   icon:'👑', name:'CHAMPION', color:'var(--r-champ)',   minRP:360,  req:'RP ≥ 360 (near-perfect)' },
+];
+
+// Max theoretical RP: (100*1.5)+(100*1.0)-(~30s*0.4) = 250+100-12 = 338... champion requires elite play
+
+function calcRP(acc, firstTry, timeSec) {
+  return Math.round(acc * 1.5 + firstTry * 1.0 - timeSec * 0.4);
+}
+
+function getRank(rp) {
+  let rank = RANKS[0];
+  for (let r of RANKS) { if (rp >= r.minRP) rank = r; }
+  return rank;
+}
+
+function buildRankTable() {
+  let body = document.getElementById('rankTableBody');
+  body.innerHTML = RANKS.slice().reverse().map(r => `
+    <tr id="rank-row-${r.id}">
+      <td>${r.icon}</td>
+      <td><span class="rank-name" style="color:${r.color}">${r.name}</span></td>
+      <td class="rank-req">${r.req}</td>
+      <td class="rank-score">—</td>
+    </tr>
+  `).join('');
+}
+
+function updateRankTable(currentRankId) {
+  RANKS.forEach(r => {
+    let row = document.getElementById('rank-row-' + r.id);
+    if (!row) return;
+    row.classList.toggle('current-rank', r.id === currentRankId);
+  });
+}
+
+// ══════════════════════════════════════════════
+// SESSION BEST
+// ══════════════════════════════════════════════
+let session = {
+  bestRP: null, bestScore: 0, bestTime: null,
+  bestAcc: null, bestFirst: null, bestCombo: 0,
+  bestRankId: 'iron', games: 0
+};
+
+function updateSessionBest(rp, score, timeSec, acc, firstTry, combo) {
+  session.games++;
+  let newRPs = [], newBests = {};
+
+  if (session.bestRP === null || rp > session.bestRP) { session.bestRP = rp; newBests.rp = true; }
+  if (score > session.bestScore) { session.bestScore = score; newBests.score = true; }
+  if (session.bestTime === null || timeSec < session.bestTime) { session.bestTime = timeSec; newBests.time = true; }
+  if (session.bestAcc === null || acc > session.bestAcc) { session.bestAcc = acc; newBests.acc = true; }
+  if (session.bestFirst === null || firstTry > session.bestFirst) { session.bestFirst = firstTry; newBests.first = true; }
+  if (combo > session.bestCombo) { session.bestCombo = combo; newBests.combo = true; }
+
+  let rank = getRank(session.bestRP);
+  session.bestRankId = rank.id;
+
+  renderBest(newBests);
+  updateHeaderRank(session.bestRP);
+  updateRankTable(rank.id);
+}
+
+function renderBest(newBests = {}) {
+  if (session.games === 0) return;
+  let rank = getRank(session.bestRP);
+  document.getElementById('bestContainer').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:13px;color:var(--muted)">${session.games} game${session.games!==1?'s':''} this session</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:16px">${rank.icon}</span>
+        <span style="font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:${rank.color};letter-spacing:2px">${rank.name}</span>
+      </div>
+    </div>
+    <div class="bestGrid">
+      <div class="bestCard ${newBests.rp?'highlight':''}">
+        <div class="bval" style="color:var(--cyan)">${session.bestRP}</div>
+        <div class="blbl">Best RP</div>
+      </div>
+      <div class="bestCard ${newBests.score?'highlight':''}">
+        <div class="bval">${session.bestScore}</div>
+        <div class="blbl">Best Score</div>
+      </div>
+      <div class="bestCard ${newBests.time?'highlight':''}">
+        <div class="bval">${session.bestTime?.toFixed(1)}s</div>
+        <div class="blbl">Best Time</div>
+      </div>
+      <div class="bestCard ${newBests.acc?'highlight':''}">
+        <div class="bval">${session.bestAcc?.toFixed(1)}%</div>
+        <div class="blbl">Best Acc</div>
+      </div>
+      <div class="bestCard ${newBests.first?'highlight':''}">
+        <div class="bval">${session.bestFirst?.toFixed(1)}%</div>
+        <div class="blbl">Best 1st Try</div>
+      </div>
+      <div class="bestCard ${newBests.combo?'highlight':''}">
+        <div class="bval">${session.bestCombo}×</div>
+        <div class="blbl">Best Combo</div>
+      </div>
+    </div>
+  `;
+}
+
+function updateHeaderRank(rp) {
+  let rank = getRank(rp);
+  document.getElementById('rankIcon').innerText = rank.icon;
+  document.getElementById('rankLabel').innerText = rank.name;
+  document.getElementById('rankLabel').style.color = rank.color;
+  document.getElementById('rankSub').innerText = `RP: ${rp}`;
+  document.getElementById('rankBadge').style.borderColor = rank.color;
+}
+
+// ══════════════════════════════════════════════
+// GAME ENGINE
+// ══════════════════════════════════════════════
 const AZ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-let order = [], idx = 0, playing = false, correctAns = "";
-let gameMode = "pos";
-let totalAttempts = 0, correctFirst = 0, triesCurrent = 0;
-let combo = 0, maxCombo = 0, score = 0;
-let startTime = 0, letterStart = 0;
+let order=[], idx=0, playing=false, correctAns="";
+let gameMode="pos";
+let totalAttempts=0, correctFirst=0, triesCurrent=0;
+let combo=0, maxCombo=0, score=0;
+let startTime=0, letterStart=0;
+let rtTimer=null;
+
+const RT_MAX = 5000; // ms — bar empties after 5s
 
 function lockModes(lock) {
   document.querySelectorAll('.modeBtn').forEach(b => lock ? b.classList.add('locked') : b.classList.remove('locked'));
@@ -168,11 +686,8 @@ function setMode(m, el) {
   el.classList.add('active');
 }
 function shuffle(a) {
-  let arr = [...a];
-  for (let j = arr.length - 1; j > 0; j--) {
-    let k = Math.floor(Math.random() * (j + 1));
-    [arr[j], arr[k]] = [arr[k], arr[j]];
-  }
+  let arr=[...a];
+  for(let j=arr.length-1;j>0;j--){let k=Math.floor(Math.random()*(j+1));[arr[j],arr[k]]=[arr[k],arr[j]];}
   return arr;
 }
 function pickMode() {
@@ -183,130 +698,177 @@ function pickMode() {
 function showIndicator(m) {
   let el = document.getElementById("indicator");
   el.className = "indicator " + m;
-  el.innerText = m === "pos" ? "🔢 POSITION" : m === "pair" ? "🔁 PAIR" : "➕ MATH";
+  el.innerText = m==="pos" ? "🔢  POSITION" : m==="pair" ? "🔁  PAIR" : "➕  MATH";
+}
+
+function startRTBar() {
+  if (rtTimer) clearInterval(rtTimer);
+  let bar = document.getElementById('rtBar');
+  let lbl = document.getElementById('rtLabel');
+  bar.style.width = '100%';
+  bar.style.background = 'var(--green)';
+  let start = performance.now();
+  rtTimer = setInterval(() => {
+    let elapsed = performance.now() - start;
+    let pct = Math.max(0, 100 - (elapsed / RT_MAX * 100));
+    bar.style.width = pct + '%';
+    if (pct > 60) bar.style.background = 'var(--green)';
+    else if (pct > 30) bar.style.background = 'var(--gold)';
+    else bar.style.background = 'var(--red)';
+    lbl.innerText = (elapsed / 1000).toFixed(2) + 's';
+    if (pct === 0) clearInterval(rtTimer);
+  }, 50);
+}
+
+function stopRTBar() {
+  if (rtTimer) { clearInterval(rtTimer); rtTimer = null; }
 }
 
 function startGame() {
-  order = shuffle(AZ); idx = 0; playing = true;
-  combo = 0; maxCombo = 0; score = 0;
-  totalAttempts = 0; correctFirst = 0;
+  order=shuffle(AZ); idx=0; playing=true;
+  combo=0; maxCombo=0; score=0;
+  totalAttempts=0; correctFirst=0;
   lockModes(true);
-  document.getElementById("startBtn").style.display = "none";
-  document.getElementById("quitBtn").style.display = "inline-block";
-  document.getElementById("reportDisp").innerText = "";
-  document.getElementById("comboDisp").innerText = "";
-  startTime = performance.now();
-  let ans = document.getElementById("answer");
-  ans.disabled = false; ans.value = ""; ans.focus();
+  document.getElementById("startBtn").style.display="none";
+  document.getElementById("quitBtn").style.display="inline-block";
+  document.getElementById("reportDisp").innerText="";
+  document.getElementById("comboDisp").innerText="";
+  startTime=performance.now();
+  let ans=document.getElementById("answer");
+  ans.disabled=false; ans.value=""; ans.focus();
   nextQ();
 }
 
 function quitGame() {
-  playing = false; lockModes(false);
-  document.getElementById("indicator").innerText = "SESSION ENDED";
-  document.getElementById("q").innerText = "—";
-  document.getElementById("answer").disabled = true;
-  document.getElementById("startBtn").style.display = "inline-block";
-  document.getElementById("quitBtn").style.display = "none";
-  document.getElementById("fill").style.width = "0%";
-  document.getElementById("comboDisp").innerText = "";
+  playing=false; lockModes(false); stopRTBar();
+  document.getElementById("indicator").innerText="";
+  document.getElementById("q").innerText="—";
+  document.getElementById("answer").disabled=true;
+  document.getElementById("startBtn").style.display="inline-block";
+  document.getElementById("quitBtn").style.display="none";
+  document.getElementById("fill").style.width="0%";
+  document.getElementById("comboDisp").innerText="";
+  document.getElementById("reportDisp").innerText="";
+  document.getElementById("progLabel").innerText="0 / 26";
+  document.getElementById("progPct").innerText="0%";
+  document.getElementById("rtBar").style.width="0%";
+  document.getElementById("rtLabel").innerText="";
 }
 
 function nextQ() {
-  let mode = pickMode();
+  let mode=pickMode();
   showIndicator(mode);
-  triesCurrent = 0;
-  letterStart = performance.now();
-  let L = order[idx];
-  let pos = AZ.indexOf(L) + 1;
-  if (mode === "pos") { document.getElementById("q").innerText = L; correctAns = String(pos); }
-  if (mode === "pair") { document.getElementById("q").innerText = L; correctAns = AZ[26 - pos]; }
-  if (mode === "math") {
-    let shift = Math.floor(Math.random() * 9) + 1;
-    let sign = Math.random() > 0.5 ? 1 : -1, s = shift * sign;
-    document.getElementById("q").innerText = `${L} ${s > 0 ? "+" : "−"} ${Math.abs(s)}`;
-    let newPos = ((pos + s - 1) % 26 + 26) % 26;
-    correctAns = AZ[newPos];
+  triesCurrent=0;
+  letterStart=performance.now();
+  startRTBar();
+  let L=order[idx];
+  let pos=AZ.indexOf(L)+1;
+  if (mode==="pos") { document.getElementById("q").innerText=L; correctAns=String(pos); }
+  if (mode==="pair") { document.getElementById("q").innerText=L; correctAns=AZ[26-pos]; }
+  if (mode==="math") {
+    let shift=Math.floor(Math.random()*9)+1;
+    let sign=Math.random()>0.5?1:-1, s=shift*sign;
+    document.getElementById("q").innerText=`${L} ${s>0?"+":"−"} ${Math.abs(s)}`;
+    let newPos=((pos+s-1)%26+26)%26;
+    correctAns=AZ[newPos];
   }
   updateUI();
 }
 
 function updateUI() {
-  document.getElementById("fill").style.width = (idx / 26 * 100) + "%";
-  let acc = totalAttempts ? ((idx / totalAttempts) * 100).toFixed(1) : "100";
-  let fAcc = idx ? ((correctFirst / idx) * 100).toFixed(1) : "100";
-  let rank = score > 2200 ? "LEGEND" : score > 1700 ? "MASTER" : score > 1200 ? "PRO" : "CADET";
-  document.getElementById("statScore").innerText = score;
-  document.getElementById("statAcc").innerText = acc + "%";
-  document.getElementById("statFirst").innerText = fAcc + "%";
-  document.getElementById("statRank").innerText = rank;
-  document.getElementById("comboDisp").innerText = combo >= 3 ? `⚡ COMBO ×${combo}` : "";
+  let pct = Math.round(idx/26*100);
+  document.getElementById("fill").style.width=pct+"%";
+  document.getElementById("progLabel").innerText=`${idx} / 26`;
+  document.getElementById("progPct").innerText=pct+"%";
+  let acc = totalAttempts ? (idx/totalAttempts*100) : 100;
+  let fAcc = idx ? (correctFirst/idx*100) : 100;
+  document.getElementById("statScore").innerText=score;
+  document.getElementById("statAcc").innerText=acc.toFixed(1)+"%";
+  document.getElementById("statFirst").innerText=fAcc.toFixed(1)+"%";
+  let elapsed = ((performance.now()-startTime)/1000).toFixed(1);
+  document.getElementById("statTime").innerText=elapsed+"s";
+  document.getElementById("comboDisp").innerText=combo>=3?`⚡ COMBO ×${combo}`:"";
 }
 
 function finish() {
-  playing = false; lockModes(false);
-  let totalTime = ((performance.now() - startTime) / 1000).toFixed(2);
-  let acc = totalAttempts ? ((idx / totalAttempts) * 100).toFixed(1) : "100";
-  let fAcc = idx ? ((correctFirst / idx) * 100).toFixed(1) : "100";
+  playing=false; lockModes(false); stopRTBar();
+  let totalTime=(performance.now()-startTime)/1000;
+  let acc=totalAttempts?(idx/totalAttempts*100):100;
+  let fAcc=idx?(correctFirst/idx*100):100;
+  let rp=calcRP(acc, fAcc, totalTime);
+  let rank=getRank(rp);
 
-  document.getElementById("indicator").innerText = "✅ COMPLETE";
-  document.getElementById("reportDisp").innerText = `Max Combo ${maxCombo} · Time ${totalTime}s`;
-  document.getElementById("startBtn").style.display = "inline-block";
-  document.getElementById("quitBtn").style.display = "none";
-  document.getElementById("comboDisp").innerText = `🏁 Final Score: ${score}`;
+  document.getElementById("indicator").innerText="";
+  document.getElementById("startBtn").style.display="inline-block";
+  document.getElementById("quitBtn").style.display="none";
+  document.getElementById("comboDisp").innerText="";
+  document.getElementById("reportDisp").innerText="";
 
-  sessionBest.games++;
-  if (score > sessionBest.score) sessionBest.score = score;
-  if (sessionBest.time === null || parseFloat(totalTime) < parseFloat(sessionBest.time)) sessionBest.time = totalTime;
-  if (sessionBest.accuracy === null || parseFloat(acc) > parseFloat(sessionBest.accuracy)) sessionBest.accuracy = acc;
-  if (sessionBest.firstTry === null || parseFloat(fAcc) > parseFloat(sessionBest.firstTry)) sessionBest.firstTry = fAcc;
-  if (maxCombo > sessionBest.maxCombo) sessionBest.maxCombo = maxCombo;
+  // Update session best BEFORE showing overlay
+  updateSessionBest(rp, score, totalTime, acc, fAcc, maxCombo);
 
-  renderBest();
+  // Show result overlay
+  document.getElementById("resIcon").innerText=rank.icon;
+  document.getElementById("resName").innerText=rank.name;
+  document.getElementById("resName").style.color=rank.color;
+  document.getElementById("resSub").innerText="RANK ACHIEVED";
+  document.getElementById("resRP").innerText=rp;
+  document.getElementById("resAcc").innerText=acc.toFixed(1)+"%";
+  document.getElementById("resFirst").innerText=fAcc.toFixed(1)+"%";
+  document.getElementById("resTime").innerText=totalTime.toFixed(2)+"s";
+  document.getElementById("resScore").innerText=score;
+  document.getElementById("resCombo").innerText=maxCombo+"×";
+  document.getElementById("resBest").innerText=session.bestRP;
+  document.getElementById("resultOverlay").classList.add("show");
 }
 
-function renderBest() {
-  document.getElementById("bestContainer").innerHTML = `
-    <div style="font-size:12px;color:var(--muted);text-align:right;margin-bottom:8px">${sessionBest.games} game${sessionBest.games !== 1 ? 's' : ''} this session</div>
-    <div class="bestGrid">
-      <div class="bestCard"><div class="val">${sessionBest.score}</div><div class="lbl">Best Score</div></div>
-      <div class="bestCard"><div class="val">${sessionBest.time}s</div><div class="lbl">Best Time</div></div>
-      <div class="bestCard"><div class="val">${sessionBest.maxCombo}×</div><div class="lbl">Best Combo</div></div>
-      <div class="bestCard"><div class="val">${sessionBest.accuracy}%</div><div class="lbl">Best Acc</div></div>
-      <div class="bestCard"><div class="val">${sessionBest.firstTry}%</div><div class="lbl">Best 1st Try</div></div>
-      <div class="bestCard" style="background:transparent;border:1px dashed var(--surface2);display:flex;align-items:center;justify-content:center">
-        <div style="font-size:11px;color:var(--muted);line-height:1.6;text-align:center">Resets on<br>page refresh</div>
-      </div>
-    </div>
-  `;
+function closeResult() {
+  document.getElementById("resultOverlay").classList.remove("show");
+  document.getElementById("answer").focus();
 }
 
 document.getElementById("answer").addEventListener("keydown", e => {
-  if (e.key !== "Enter" || !playing) return;
-  let val = e.target.value.trim().toUpperCase();
+  if (e.key!=="Enter"||!playing) return;
+  let val=e.target.value.trim().toUpperCase();
   totalAttempts++; triesCurrent++;
 
-  if (val === correctAns) {
-    let rt = performance.now() - letterStart;
-    if (triesCurrent === 1) correctFirst++;
-    let speedBonus = Math.max(0, 1000 - rt);
-    score += Math.floor(60 + speedBonus / 18 + combo * 6);
-    combo++; maxCombo = Math.max(maxCombo, combo);
+  if (val===correctAns) {
+    let rt=performance.now()-letterStart;
+    if (triesCurrent===1) correctFirst++;
+    let speedBonus=Math.max(0,1000-rt);
+    score+=Math.floor(60+speedBonus/18+combo*6);
+    combo++; maxCombo=Math.max(maxCombo,combo);
+    // Flash q green
+    document.getElementById("q").classList.add("flash-right");
+    setTimeout(()=>document.getElementById("q").classList.remove("flash-right"),200);
     idx++;
-    if (idx === 26) { finish(); updateUI(); e.target.value = ""; return; }
+    if (idx===26) { updateUI(); finish(); e.target.value=""; return; }
     nextQ();
   } else {
-    combo = 0;
+    combo=0;
     document.getElementById("q").classList.add("shake");
-    document.body.classList.add("flashWrong");
-    setTimeout(() => {
+    document.getElementById("gameArea").classList.add("flash-wrong");
+    setTimeout(()=>{
       document.getElementById("q").classList.remove("shake");
-      document.body.classList.remove("flashWrong");
-    }, 300);
+      document.getElementById("gameArea").classList.remove("flash-wrong");
+    },300);
   }
   updateUI();
-  e.target.value = "";
+  e.target.value="";
 });
+
+// Close overlay on backdrop click
+document.getElementById("resultOverlay").addEventListener("click", e => {
+  if (e.target===document.getElementById("resultOverlay")) closeResult();
+});
+
+// Keyboard shortcut: Escape to close overlay
+document.addEventListener("keydown", e => {
+  if (e.key==="Escape") closeResult();
+});
+
+// ── INIT ──
+buildRankTable();
 </script>
 </body>
 </html>
