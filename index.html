@@ -1,34 +1,556 @@
-function loginUser(){
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Alphabet Championship Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #020617;
+    --surface: #0f172a;
+    --surface2: #1e293b;
+    --green: #22c55e;
+    --blue: #38bdf8;
+    --purple: #c084fc;
+    --orange: #fb923c;
+    --red: #ef4444;
+    --yellow: #facc15;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
 
-let u = document.getElementById("userName").value.trim()
-let p = document.getElementById("userPass").value.trim()
-let msg = document.getElementById("loginMsg")
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-if(!u || !p){
-msg.innerText = "Enter username & password"
-return
+  body {
+    font-family: 'Exo 2', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  /* ── SETUP NOTICE ── */
+  #setupNotice {
+    position: fixed; inset: 0; background: rgba(2,6,23,0.97);
+    display: flex; justify-content: center; align-items: center; z-index: 9999;
+  }
+  .setupBox {
+    background: var(--surface); border: 1px solid var(--orange);
+    border-radius: 16px; padding: 32px; width: 500px; max-width: 95vw;
+  }
+  .setupBox h2 { font-family: 'Orbitron', sans-serif; color: var(--orange); margin-bottom: 12px; }
+  .setupBox p { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 8px; }
+  .setupBox code { background: var(--surface2); padding: 3px 7px; border-radius: 4px; color: var(--blue); font-size: 13px; }
+  .setupBox input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--surface2); background: var(--bg); color: var(--text); font-size: 14px; margin: 8px 0; }
+  .setupBox .btn-row { display: flex; gap: 10px; margin-top: 14px; }
+  .setupBox button { flex: 1; padding: 11px; border: none; border-radius: 8px; font-weight: 700; font-family: 'Exo 2', sans-serif; cursor: pointer; }
+  .btn-orange { background: var(--orange); color: #000; }
+  .btn-green { background: var(--green); color: #000; }
+  .btn-muted { background: var(--surface2); color: var(--text); }
+
+  /* ── LOGIN ── */
+  #loginScreen {
+    position: fixed; inset: 0; background: rgba(2,6,23,0.96);
+    display: flex; justify-content: center; align-items: center; z-index: 998;
+  }
+  .loginBox {
+    background: var(--surface); border: 1px solid var(--surface2);
+    border-radius: 16px; padding: 32px; width: 320px; text-align: center;
+  }
+  .loginBox h2 { font-family: 'Orbitron', sans-serif; color: var(--blue); margin-bottom: 18px; font-size: 18px; letter-spacing: 2px; }
+  .loginBox input { width: 100%; padding: 11px 14px; margin: 5px 0; border-radius: 8px; border: 1px solid var(--surface2); background: var(--bg); color: var(--text); font-family: 'Exo 2', sans-serif; font-size: 15px; }
+  .loginBox input:focus { outline: none; border-color: var(--blue); }
+  .loginBox button { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; background: var(--green); color: #000; font-weight: 700; font-size: 15px; cursor: pointer; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; transition: opacity .2s; }
+  .loginBox button:hover { opacity: .85; }
+  #loginMsg { color: var(--red); margin-top: 8px; font-size: 13px; min-height: 18px; }
+  .login-spinner { display: none; color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .setup-link { color: var(--orange); font-size: 12px; margin-top: 12px; cursor: pointer; text-decoration: underline; }
+
+  /* ── MAIN LAYOUT ── */
+  #app { width: 100%; max-width: 700px; }
+
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 0 16px 0; border-bottom: 1px solid var(--surface2); margin-bottom: 16px;
+  }
+  header h1 { font-family: 'Orbitron', sans-serif; font-size: 15px; letter-spacing: 3px; color: var(--blue); }
+  #userChip { background: var(--surface2); padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--green); font-weight: 700; }
+
+  /* ── MODE BAR ── */
+  .modeBar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .modeBtn {
+    padding: 8px 18px; border-radius: 10px; border: 1px solid var(--surface2);
+    background: var(--surface); color: var(--muted); cursor: pointer;
+    font-weight: 600; font-family: 'Exo 2', sans-serif; font-size: 14px; transition: all .2s;
+  }
+  .modeBtn:hover:not(.locked) { border-color: var(--blue); color: var(--text); }
+  .modeBtn.active { background: var(--surface2); border-color: var(--green); color: var(--green); }
+  .modeBtn.locked { opacity: .35; cursor: not-allowed; }
+
+  /* ── GAME AREA ── */
+  #gameArea {
+    background: var(--surface); border-radius: 16px;
+    padding: 28px; text-align: center; border: 1px solid var(--surface2);
+    margin-bottom: 14px;
+  }
+  .indicator { height: 28px; font-size: 15px; font-weight: 700; letter-spacing: 2px; margin-bottom: 8px; }
+  .indicator.pos { color: var(--blue); }
+  .indicator.pair { color: var(--purple); }
+  .indicator.math { color: var(--orange); }
+
+  #q { font-family: 'Orbitron', sans-serif; font-size: 130px; font-weight: 900; line-height: 1; margin: 10px 0; }
+
+  #answer {
+    padding: 14px 20px; font-size: 26px; width: 200px; text-align: center;
+    border-radius: 12px; border: 2px solid var(--surface2); background: var(--bg);
+    color: var(--text); font-family: 'Orbitron', sans-serif; letter-spacing: 4px;
+    transition: border-color .2s;
+  }
+  #answer:focus { outline: none; border-color: var(--blue); }
+
+  .btnRow { display: flex; justify-content: center; gap: 10px; margin-top: 16px; }
+  .btn-start {
+    padding: 13px 32px; font-size: 16px; cursor: pointer; border-radius: 12px;
+    border: none; background: var(--green); color: #000; font-weight: 700;
+    font-family: 'Orbitron', sans-serif; letter-spacing: 2px; transition: opacity .2s;
+  }
+  .btn-start:hover { opacity: .85; }
+  .btn-quit {
+    padding: 13px 20px; font-size: 14px; cursor: pointer; border-radius: 12px;
+    border: none; background: var(--red); color: #fff; font-weight: 700;
+    font-family: 'Exo 2', sans-serif;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .bar { height: 8px; background: var(--surface2); border-radius: 20px; overflow: hidden; margin-top: 14px; }
+  .fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--blue), var(--green)); transition: width .3s; }
+
+  /* ── STATS ── */
+  .statsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .statCard { background: var(--surface2); border-radius: 10px; padding: 10px 8px; text-align: center; }
+  .statCard .val { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: var(--yellow); }
+  .statCard .lbl { font-size: 11px; color: var(--muted); margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+  #comboDisp { font-family: 'Orbitron', sans-serif; font-size: 22px; color: var(--green); font-weight: 900; text-align: center; min-height: 30px; margin-top: 10px; }
+  #reportDisp { text-align: center; margin-top: 8px; color: var(--purple); font-weight: 600; min-height: 20px; }
+
+  /* ── LEADERBOARD ── */
+  #lbSection { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--surface2); }
+  #lbSection h3 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 3px; color: var(--yellow); margin-bottom: 14px; }
+  .lbRow {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+    border-radius: 8px; margin-bottom: 6px; background: var(--surface2);
+    transition: background .2s;
+  }
+  .lbRow.me { border: 1px solid var(--green); }
+  .lbRank { font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--muted); width: 26px; text-align: center; }
+  .lbRank.gold { color: #fbbf24; font-weight: 900; }
+  .lbRank.silver { color: #94a3b8; font-weight: 900; }
+  .lbRank.bronze { color: #b45309; font-weight: 900; }
+  .lbName { flex: 1; font-weight: 700; font-size: 15px; }
+  .lbScore { font-family: 'Orbitron', sans-serif; font-size: 15px; color: var(--blue); }
+  #lbEmpty { color: var(--muted); font-size: 14px; text-align: center; padding: 16px; }
+  #lbStatus { font-size: 12px; color: var(--muted); margin-bottom: 10px; text-align: right; cursor: pointer; }
+  #lbStatus:hover { color: var(--blue); }
+
+  /* ── ANIMATIONS ── */
+  .shake { animation: shake .3s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-10px)} 40%{transform:translateX(10px)} 60%{transform:translateX(-8px)} 80%{transform:translateX(6px)} }
+
+  .flashWrong { animation: flashWrong .25s; }
+  @keyframes flashWrong { 0%{background:var(--bg)} 50%{background:#3b0a0a} 100%{background:var(--bg)} }
+</style>
+</head>
+<body>
+
+<!-- SETUP NOTICE (shown when no bin is configured) -->
+<div id="setupNotice" style="display:none">
+  <div class="setupBox">
+    <h2>⚙️ ONE-TIME SETUP</h2>
+    <p>To share a leaderboard across all players, this app uses <strong>JSONBin.io</strong> (free). Follow these steps:</p>
+    <p>1. Go to <strong>jsonbin.io</strong> → Sign up free → go to <strong>API Keys</strong> → copy your <code>Secret Key</code></p>
+    <p>2. Go to <strong>Bins</strong> → click <strong>+ Create Bin</strong> → paste <code>{"users":{}}</code> → Save → copy the <strong>Bin ID</strong> from the URL</p>
+    <p>3. Paste both below:</p>
+    <input id="setupApiKey" placeholder="$2b$10$... (Secret Key)" />
+    <input id="setupBinId" placeholder="64abc123... (Bin ID)" />
+    <div class="btn-row">
+      <button class="btn-green" onclick="saveSetup()">SAVE & CONTINUE</button>
+    </div>
+    <p style="margin-top:14px;font-size:12px;color:var(--muted)">
+      ⚠️ These are stored in your browser only. For a shared public leaderboard, hardcode them in the HTML before deploying to GitHub Pages.
+    </p>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="loginBox">
+    <h2>ALPHABET TRAINER</h2>
+    <input id="userName" placeholder="Username" autocomplete="username"/>
+    <input id="userPass" type="password" placeholder="Password" autocomplete="current-password"/>
+    <button onclick="loginUser()">LOGIN / REGISTER</button>
+    <div id="loginMsg"></div>
+    <div class="login-spinner" id="loginSpinner">Connecting to cloud…</div>
+    <div class="setup-link" onclick="showSetup()">⚙️ Configure leaderboard</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <h1>ALPHABET CHAMPIONSHIP</h1>
+    <div id="userChip">—</div>
+  </header>
+
+  <div class="modeBar">
+    <button class="modeBtn active" onclick="setMode('pos',this)">🔢 Position</button>
+    <button class="modeBtn" onclick="setMode('pair',this)">🔁 Pair</button>
+    <button class="modeBtn" onclick="setMode('math',this)">➕ Math</button>
+    <button class="modeBtn" onclick="setMode('mixed',this)">🎲 Mixed</button>
+  </div>
+
+  <div id="gameArea">
+    <div class="indicator" id="indicator"></div>
+    <div id="q">—</div>
+    <input id="answer" disabled autocomplete="off" placeholder="?"/>
+    <div class="btnRow">
+      <button class="btn-start" id="startBtn" onclick="startGame()">▶ START</button>
+      <button class="btn-quit" id="quitBtn" onclick="quitGame()" style="display:none">✕ QUIT</button>
+    </div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div class="statsGrid">
+      <div class="statCard"><div class="val" id="statScore">0</div><div class="lbl">Score</div></div>
+      <div class="statCard"><div class="val" id="statAcc">—</div><div class="lbl">Accuracy</div></div>
+      <div class="statCard"><div class="val" id="statFirst">—</div><div class="lbl">1st-Try %</div></div>
+      <div class="statCard"><div class="val" id="statRank">—</div><div class="lbl">Rank</div></div>
+    </div>
+    <div id="comboDisp"></div>
+    <div id="reportDisp"></div>
+  </div>
+
+  <div id="lbSection">
+    <h3>🏆 LEADERBOARD</h3>
+    <div id="lbStatus" onclick="loadLeaderboard()">↻ Refresh</div>
+    <div id="lbContainer"><div id="lbEmpty">Loading…</div></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — hardcode your JSONBin credentials here
+// before deploying to GitHub Pages:
+//   const JSONBIN_API_KEY = "$2b$10$YOUR_KEY";
+//   const JSONBIN_BIN_ID  = "YOUR_BIN_ID";
+// Or leave as null to use browser localStorage setup flow.
+// ══════════════════════════════════════════════
+let JSONBIN_API_KEY = null;
+let JSONBIN_BIN_ID  = null;
+
+// ── Load stored config ──
+function loadConfig() {
+  JSONBIN_API_KEY = localStorage.getItem("act_api_key") || null;
+  JSONBIN_BIN_ID  = localStorage.getItem("act_bin_id")  || null;
 }
 
-let db = JSON.parse(localStorage.getItem("alphabet_users") || "{}")
-
-// register
-if(!db[u]){
-db[u] = {
-password: p,
-bestScore: 0
+function showSetup() {
+  setupNotice.style.display = "flex";
 }
-localStorage.setItem("alphabet_users", JSON.stringify(db))
-}
-
-// login check
-if(db[u].password !== p){
-msg.innerText = "Wrong password"
-return
+function saveSetup() {
+  let k = document.getElementById("setupApiKey").value.trim();
+  let b = document.getElementById("setupBinId").value.trim();
+  if (!k || !b) { alert("Enter both fields."); return; }
+  localStorage.setItem("act_api_key", k);
+  localStorage.setItem("act_bin_id",  b);
+  JSONBIN_API_KEY = k; JSONBIN_BIN_ID = b;
+  setupNotice.style.display = "none";
 }
 
-CURRENT_USER = u
-
-document.getElementById("loginScreen").style.display = "none"
-
-renderLeaderboard()
+// ── JSONBin helpers ──
+async function readBin() {
+  if (!JSONBIN_API_KEY || !JSONBIN_BIN_ID) return null;
+  try {
+    let r = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+      headers: { "X-Master-Key": JSONBIN_API_KEY }
+    });
+    if (!r.ok) return null;
+    let j = await r.json();
+    return j.record;
+  } catch { return null; }
 }
+
+async function writeBin(data) {
+  if (!JSONBIN_API_KEY || !JSONBIN_BIN_ID) return false;
+  try {
+    let r = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": JSONBIN_API_KEY
+      },
+      body: JSON.stringify(data)
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+// ── Simple hash (not cryptographic, but reasonable for casual auth) ──
+async function hashPass(pass) {
+  let enc = new TextEncoder().encode("ACT_SALT_" + pass);
+  let buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("").slice(0,16);
+}
+
+// ── Auth ──
+let CURRENT_USER = null;
+
+async function loginUser() {
+  let u = document.getElementById("userName").value.trim().toLowerCase();
+  let p = document.getElementById("userPass").value.trim();
+  let msg = document.getElementById("loginMsg");
+  let spinner = document.getElementById("loginSpinner");
+
+  if (!u || !p) { msg.innerText = "Enter username & password."; return; }
+  if (u.length < 2) { msg.innerText = "Username too short."; return; }
+
+  msg.innerText = "";
+  spinner.style.display = "block";
+
+  let hash = await hashPass(p);
+  let data = await readBin();
+
+  // Fallback to localStorage if no bin configured
+  if (!data) {
+    let local = JSON.parse(localStorage.getItem("act_local_db") || '{"users":{}}');
+    data = local;
+    lbStatus.innerText = "⚠️ Local mode (no cloud configured)";
+  }
+
+  if (!data.users) data.users = {};
+
+  if (!data.users[u]) {
+    // Register
+    data.users[u] = { hash, bestScore: 0, games: 0 };
+    await writeBin(data);
+    localStorage.setItem("act_local_db", JSON.stringify(data));
+  } else {
+    if (data.users[u].hash !== hash) {
+      spinner.style.display = "none";
+      msg.innerText = "Wrong password.";
+      return;
+    }
+  }
+
+  CURRENT_USER = u;
+  spinner.style.display = "none";
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("userChip").innerText = "👤 " + u;
+  loadLeaderboard();
+}
+
+async function saveScore(sc) {
+  if (!CURRENT_USER) return;
+  let data = await readBin();
+  if (!data) {
+    data = JSON.parse(localStorage.getItem("act_local_db") || '{"users":{}}');
+  }
+  if (!data.users) data.users = {};
+  if (!data.users[CURRENT_USER]) data.users[CURRENT_USER] = { bestScore: 0, games: 0 };
+
+  if (sc > (data.users[CURRENT_USER].bestScore || 0)) {
+    data.users[CURRENT_USER].bestScore = sc;
+  }
+  data.users[CURRENT_USER].games = (data.users[CURRENT_USER].games || 0) + 1;
+
+  await writeBin(data);
+  localStorage.setItem("act_local_db", JSON.stringify(data));
+  loadLeaderboard();
+}
+
+async function loadLeaderboard() {
+  document.getElementById("lbStatus").innerText = "↻ Refreshing…";
+  let data = await readBin();
+  if (!data) {
+    data = JSON.parse(localStorage.getItem("act_local_db") || '{"users":{}}');
+    document.getElementById("lbStatus").innerText = "⚠️ Local mode — click to retry";
+  } else {
+    document.getElementById("lbStatus").innerText = "☁️ Cloud sync — click to refresh";
+    localStorage.setItem("act_local_db", JSON.stringify(data));
+  }
+  renderLeaderboard(data);
+}
+
+function renderLeaderboard(data) {
+  let users = data?.users || {};
+  let arr = Object.entries(users)
+    .filter(([,d]) => d.bestScore > 0)
+    .sort((a,b) => b[1].bestScore - a[1].bestScore);
+
+  let container = document.getElementById("lbContainer");
+  if (!arr.length) { container.innerHTML = '<div id="lbEmpty">No scores yet — play first!</div>'; return; }
+
+  let medals = ["🥇","🥈","🥉"];
+  let rankClass = ["gold","silver","bronze"];
+
+  container.innerHTML = arr.map(([name, d], i) => `
+    <div class="lbRow ${name === CURRENT_USER ? 'me' : ''}">
+      <div class="lbRank ${rankClass[i]||''}">${medals[i] || (i+1)}</div>
+      <div class="lbName">${escHtml(name)} ${name === CURRENT_USER ? '<span style="color:var(--green);font-size:11px">YOU</span>' : ''}</div>
+      <div style="color:var(--muted);font-size:12px;margin-right:8px">${d.games||0}g</div>
+      <div class="lbScore">${d.bestScore}</div>
+    </div>
+  `).join("");
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ══════════════════════════════════════════════
+// GAME ENGINE
+// ══════════════════════════════════════════════
+const AZ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+let order = [], idx = 0, playing = false, correctAns = "";
+let gameMode = "pos";
+let totalAttempts = 0, correctFirst = 0, triesCurrent = 0;
+let combo = 0, maxCombo = 0, score = 0;
+let startTime = 0, letterStart = 0;
+
+function lockModes(lock) {
+  document.querySelectorAll('.modeBtn').forEach(b => lock ? b.classList.add('locked') : b.classList.remove('locked'));
+}
+function setMode(m, el) {
+  if (playing) return;
+  gameMode = m;
+  document.querySelectorAll('.modeBtn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function shuffle(a) {
+  let arr = [...a];
+  for (let j = arr.length-1; j > 0; j--) {
+    let k = Math.floor(Math.random()*(j+1));
+    [arr[j],arr[k]] = [arr[k],arr[j]];
+  }
+  return arr;
+}
+function pickMode() {
+  if (gameMode !== "mixed") return gameMode;
+  let r = Math.random();
+  return r < 0.33 ? "pos" : r < 0.66 ? "pair" : "math";
+}
+function showIndicator(m) {
+  let el = document.getElementById("indicator");
+  el.className = "indicator " + m;
+  el.innerText = m==="pos" ? "🔢 POSITION" : m==="pair" ? "🔁 PAIR" : "➕ MATH";
+}
+
+function startGame() {
+  order = shuffle(AZ); idx = 0; playing = true;
+  combo = 0; maxCombo = 0; score = 0;
+  totalAttempts = 0; correctFirst = 0;
+  lockModes(true);
+  document.getElementById("startBtn").style.display = "none";
+  document.getElementById("quitBtn").style.display = "inline-block";
+  document.getElementById("reportDisp").innerText = "";
+  startTime = performance.now();
+  let ans = document.getElementById("answer");
+  ans.disabled = false; ans.value = ""; ans.focus();
+  nextQ();
+}
+
+function quitGame() {
+  playing = false; lockModes(false);
+  document.getElementById("indicator").innerText = "SESSION ENDED";
+  document.getElementById("q").innerText = "—";
+  document.getElementById("answer").disabled = true;
+  document.getElementById("startBtn").style.display = "inline-block";
+  document.getElementById("quitBtn").style.display = "none";
+  document.getElementById("fill").style.width = "0%";
+  document.getElementById("comboDisp").innerText = "";
+}
+
+function nextQ() {
+  let mode = pickMode();
+  showIndicator(mode);
+  triesCurrent = 0;
+  letterStart = performance.now();
+  let L = order[idx];
+  let pos = AZ.indexOf(L) + 1;
+  if (mode === "pos") { document.getElementById("q").innerText = L; correctAns = String(pos); }
+  if (mode === "pair") { document.getElementById("q").innerText = L; correctAns = AZ[26-pos]; }
+  if (mode === "math") {
+    let shift = Math.floor(Math.random()*9)+1;
+    let sign = Math.random()>0.5?1:-1, s=shift*sign;
+    document.getElementById("q").innerText = `${L} ${s>0?"+":"−"} ${Math.abs(s)}`;
+    let newPos = ((pos+s-1)%26+26)%26;
+    correctAns = AZ[newPos];
+  }
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById("fill").style.width = (idx/26*100)+"%";
+  let acc = totalAttempts ? ((idx/totalAttempts)*100).toFixed(1) : "100";
+  let fAcc = idx ? ((correctFirst/idx)*100).toFixed(1) : "100";
+  let rank = score > 2200 ? "LEGEND" : score > 1700 ? "MASTER" : score > 1200 ? "PRO" : "CADET";
+  document.getElementById("statScore").innerText = score;
+  document.getElementById("statAcc").innerText = acc + "%";
+  document.getElementById("statFirst").innerText = fAcc + "%";
+  document.getElementById("statRank").innerText = rank;
+  document.getElementById("comboDisp").innerText = combo >= 3 ? `⚡ COMBO ×${combo}` : "";
+}
+
+async function finish() {
+  playing = false; lockModes(false);
+  let totalTime = ((performance.now()-startTime)/1000).toFixed(2);
+  document.getElementById("indicator").innerText = "✅ COMPLETE";
+  document.getElementById("reportDisp").innerText = `Max Combo ${maxCombo} | Time ${totalTime}s`;
+  document.getElementById("startBtn").style.display = "inline-block";
+  document.getElementById("quitBtn").style.display = "none";
+  document.getElementById("comboDisp").innerText = `🏁 Final Score: ${score}`;
+  await saveScore(score);
+}
+
+document.getElementById("answer").addEventListener("keydown", async e => {
+  if (e.key !== "Enter" || !playing) return;
+  let val = e.target.value.trim().toUpperCase();
+  totalAttempts++; triesCurrent++;
+
+  if (val === correctAns) {
+    let rt = performance.now() - letterStart;
+    if (triesCurrent === 1) correctFirst++;
+    let speedBonus = Math.max(0, 1000 - rt);
+    score += Math.floor(60 + speedBonus/18 + combo*6);
+    combo++; maxCombo = Math.max(maxCombo, combo);
+    idx++;
+    if (idx === 26) { await finish(); updateUI(); e.target.value = ""; return; }
+    nextQ();
+  } else {
+    combo = 0;
+    document.getElementById("q").classList.add("shake");
+    document.body.classList.add("flashWrong");
+    setTimeout(() => {
+      document.getElementById("q").classList.remove("shake");
+      document.body.classList.remove("flashWrong");
+    }, 300);
+  }
+  updateUI();
+  e.target.value = "";
+});
+
+// ── INIT ──
+loadConfig();
+if (!JSONBIN_API_KEY || !JSONBIN_BIN_ID) {
+  // Check if user had set up before
+  let k = localStorage.getItem("act_api_key");
+  let b = localStorage.getItem("act_bin_id");
+  if (!k || !b) {
+    // Show setup on first login attempt, not now
+    document.getElementById("lbStatus").innerText = "⚙️ No cloud configured — click to setup";
+  }
+}
+</script>
+</body>
+</html>
