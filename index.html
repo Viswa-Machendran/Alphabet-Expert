@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Alphabet Championship Trainer</title>
+<style>
+body{font-family:Arial;background:#020617;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
+#game{text-align:center;width:640px}
+
+.modeBar{margin-bottom:8px}
+.modeBtn{padding:8px 16px;margin:4px;border-radius:10px;border:none;background:#1e293b;color:#fff;cursor:pointer;font-weight:600}
+.modeBtn.active{background:#22c55e;color:#000}
+.modeBtn.locked{opacity:.4;cursor:not-allowed}
+
+.indicator{height:26px;font-size:18px;font-weight:700;margin-bottom:6px}
+.indicator.pos{color:#38bdf8}
+.indicator.pair{color:#c084fc}
+.indicator.math{color:#fb923c}
+
+.q{font-size:150px;font-weight:900;margin:6px}
+
+input{padding:14px;font-size:26px;width:220px;text-align:center;border-radius:12px;border:none}
+
+button.start{padding:14px 30px;font-size:18px;margin-top:10px;cursor:pointer;border-radius:12px;border:none;background:#22c55e;color:#000;font-weight:700}
+button.quit{padding:10px 20px;font-size:14px;margin-left:10px;border-radius:10px;border:none;background:#ef4444;color:#fff;cursor:pointer}
+
+.bar{height:16px;background:#1e293b;border-radius:20px;overflow:hidden;margin-top:10px}
+.fill{height:100%;width:0%;background:#38bdf8;transition:.25s}
+
+.row{margin-top:8px;font-size:20px}
+.combo{color:#22c55e;font-weight:700}
+.stats{color:#facc15}
+.report{color:#fb7185}
+.dashboard{color:#cbd5e1;font-size:15px}
+
+.shake{animation:shake .25s}
+@keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-6px)}100%{transform:translateX(0)}}
+.flashWrong{background:#7f1d1d}
+</style>
+</head>
+<body>
+<div id="game">
+<h1>Alphabet Championship Trainer</h1>
+
+<div class="modeBar" id="modeBar">
+<button class="modeBtn active" onclick="setMode('pos',this)">Position</button>
+<button class="modeBtn" onclick="setMode('pair',this)">Pair</button>
+<button class="modeBtn" onclick="setMode('math',this)">Math</button>
+<button class="modeBtn" onclick="setMode('mixed',this)">Mixed</button>
+</div>
+
+<div id="indicator" class="indicator"></div>
+<div class="q" id="q">-</div>
+<input id="answer" disabled autocomplete="off" />
+<br>
+<button class="start" id="startBtn" onclick="startGame()">START</button>
+<button class="quit" id="quitBtn" onclick="quitGame()" style="display:none">QUIT</button>
+
+<div class="bar"><div class="fill" id="fill"></div></div>
+
+<div class="row combo" id="combo"></div>
+<div class="row stats" id="stats"></div>
+<div class="row report" id="report"></div>
+<div class="row dashboard" id="dash"></div>
+</div>
+
+<script>
+const AZ="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+let order=[]
+let i=0
+let playing=false
+let correctAns=""
+let gameMode="pos"
+
+let totalAttempts=0
+let correctFirst=0
+let triesCurrent=0
+let combo=0
+let maxCombo=0
+let score=0
+
+let slowMap={}
+let startTime=0
+let letterStart=0
+
+function lockModes(lock){
+document.querySelectorAll('.modeBtn').forEach(b=>{
+if(lock){b.classList.add('locked')}
+else{b.classList.remove('locked')}
+})
+}
+
+function setMode(m,el){
+if(playing) return
+
+gameMode=m
+
+document.querySelectorAll('.modeBtn').forEach(b=>b.classList.remove('active'))
+el.classList.add('active')
+}
+
+function shuffle(a){
+let arr=[...a]
+for(let j=arr.length-1;j>0;j--){
+let k=Math.floor(Math.random()*(j+1))
+;[arr[j],arr[k]]=[arr[k],arr[j]]
+}
+return arr
+}
+
+function buildOrder(){
+return shuffle(AZ)
+}
+
+function pickMode(){
+if(gameMode!=="mixed") return gameMode
+let r=Math.random()
+if(r<0.33) return "pos"
+if(r<0.66) return "pair"
+return "math"
+}
+
+function showIndicator(m){
+let el=document.getElementById("indicator")
+el.className="indicator "+m
+if(m==="pos") el.innerText="🔢 POSITION"
+if(m==="pair") el.innerText="🔁 PAIR"
+if(m==="math") el.innerText="➕ MATH"
+}
+
+function startGame(){
+order=buildOrder()
+i=0
+playing=true
+combo=0
+maxCombo=0
+score=0
+slowMap={}
+totalAttempts=0
+correctFirst=0
+
+lockModes(true)
+
+document.getElementById("startBtn").style.display="none"
+document.getElementById("quitBtn").style.display="inline-block"
+
+startTime=performance.now()
+
+let inp=document.getElementById("answer")
+inp.disabled=false
+inp.value=""
+inp.focus()
+
+nextQ()
+}
+
+function quitGame(){
+playing=false
+order=[]
+
+lockModes(false)
+
+document.getElementById("indicator").innerText="GAME TERMINATED"
+document.getElementById("q").innerText="-"
+document.getElementById("answer").disabled=true
+
+document.getElementById("startBtn").style.display="inline-block"
+document.getElementById("quitBtn").style.display="none"
+
+// clear stats
+combo=0
+score=0
+slowMap={}
+document.getElementById("combo").innerText=""
+document.getElementById("stats").innerText=""
+document.getElementById("report").innerText=""
+document.getElementById("dash").innerText=""
+document.getElementById("fill").style.width="0%"
+}
+
+function nextQ(){
+let mode=pickMode()
+showIndicator(mode)
+
+triesCurrent=0
+letterStart=performance.now()
+
+let L=order[i]
+let pos=AZ.indexOf(L)+1
+let q=document.getElementById("q")
+
+if(mode==="pos"){
+q.innerText=L
+correctAns=String(pos)
+}
+
+if(mode==="pair"){
+q.innerText=L
+correctAns=AZ[26-pos]
+}
+
+if(mode==="math"){
+let shift=Math.floor(Math.random()*9)+1
+let sign=Math.random()>0.5?1:-1
+let s=shift*sign
+q.innerText=`${L} ${s>0?'+':'-'} ${Math.abs(s)}`
+let newPos=((pos+s-1)%26+26)%26
+correctAns=AZ[newPos]
+}
+
+updateUI()
+}
+
+function updateUI(){
+document.getElementById("fill").style.width=(i/26*100)+"%"
+
+let acc=totalAttempts?((i/totalAttempts)*100).toFixed(1):100
+let fAcc=i?((correctFirst/i)*100).toFixed(1):100
+
+let rank=""
+if(score>2200) rank="🏆 LEGEND"
+else if(score>1700) rank="🔥 MASTER"
+else if(score>1200) rank="⭐ PRO"
+else rank="🙂 TRAINING"
+
+
+document.getElementById("stats").innerText=`Score ${score} | Acc ${acc}% | First ${fAcc}% | ${rank}`
+document.getElementById("combo").innerText=combo?`⚡ Combo x${combo}`:""
+}
+
+function finish(){
+playing=false
+lockModes(false)
+
+let totalTime=((performance.now()-startTime)/1000).toFixed(2)
+let avg=(Object.values(slowMap).reduce((a,b)=>a+b,0)/26/1000).toFixed(2)
+
+
+document.getElementById("indicator").innerText="SESSION COMPLETE"
+document.getElementById("report").innerText=`Max Combo ${maxCombo}`
+document.getElementById("dash").innerText=`Time ${totalTime}s | Avg RT ${avg}s`
+
+
+document.getElementById("startBtn").style.display="inline-block"
+document.getElementById("quitBtn").style.display="none"
+}
+
+
+document.getElementById("answer").addEventListener("keydown",e=>{
+if(e.key!=="Enter"||!playing) return
+
+let val=e.target.value.trim().toUpperCase()
+totalAttempts++
+triesCurrent++
+
+if(val==correctAns){
+let rt=performance.now()-letterStart
+let L=order[i]
+slowMap[L]=Math.max(slowMap[L]||0,rt)
+
+if(triesCurrent===1) correctFirst++
+
+let speedBonus=Math.max(0,1000-rt)
+score+=Math.floor(60 + speedBonus/18 + combo*6)
+
+combo++
+maxCombo=Math.max(maxCombo,combo)
+
+i++
+
+if(i===26){finish();updateUI();return}
+
+nextQ()
+
+}else{
+combo=0
+let q=document.getElementById("q")
+q.classList.add("shake")
+document.body.classList.add("flashWrong")
+setTimeout(()=>{q.classList.remove("shake");document.body.classList.remove("flashWrong")},200)
+}
+
+updateUI()
+e.target.value=""
+})
+</script>
+</body>
+</html>
