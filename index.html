@@ -542,14 +542,10 @@ document.getElementById("answer").addEventListener("keydown", async e => {
 
 // ── INIT ──
 loadConfig();
+// Always hide setup screen when credentials are hardcoded
+document.getElementById("setupNotice").style.display = "none";
 if (!JSONBIN_API_KEY || !JSONBIN_BIN_ID) {
-  // Check if user had set up before
-  let k = localStorage.getItem("act_api_key");
-  let b = localStorage.getItem("act_bin_id");
-  if (!k || !b) {
-    // Show setup on first login attempt, not now
-    document.getElementById("lbStatus").innerText = "⚙️ No cloud configured — click to setup";
-  }
+  document.getElementById("lbStatus").innerText = "⚙️ No cloud configured — click to setup";
 }
 </script>
 </body>
