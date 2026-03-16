@@ -8,6 +8,12 @@
 body{font-family:Arial;background:#020617;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
 #game{text-align:center;width:640px}
 
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:#020617;display:flex;justify-content:center;align-items:center;z-index:999}
+.loginBox{background:#111827;padding:30px;border-radius:12px;width:300px;text-align:center}
+.loginBox input{width:100%;padding:10px;margin:6px 0;border-radius:6px;border:none}
+.loginBox button{padding:10px 20px;margin-top:10px;border:none;border-radius:8px;background:#22c55e;font-weight:700;cursor:pointer}
+
 .modeBar{margin-bottom:8px}
 .modeBtn{padding:8px 16px;margin:4px;border-radius:10px;border:none;background:#1e293b;color:#fff;cursor:pointer;font-weight:600}
 .modeBtn.active{background:#22c55e;color:#000}
@@ -19,8 +25,7 @@ body{font-family:Arial;background:#020617;color:#fff;display:flex;justify-conten
 .indicator.math{color:#fb923c}
 
 .q{font-size:150px;font-weight:900;margin:6px}
-
-input{padding:14px;font-size:26px;width:220px;text-align:center;border-radius:12px;border:none}
+input#answer{padding:14px;font-size:26px;width:220px;text-align:center;border-radius:12px;border:none}
 
 button.start{padding:14px 30px;font-size:18px;margin-top:10px;cursor:pointer;border-radius:12px;border:none;background:#22c55e;color:#000;font-weight:700}
 button.quit{padding:10px 20px;font-size:14px;margin-left:10px;border-radius:10px;border:none;background:#ef4444;color:#fff;cursor:pointer}
@@ -34,16 +39,29 @@ button.quit{padding:10px 20px;font-size:14px;margin-left:10px;border-radius:10px
 .report{color:#fb7185}
 .dashboard{color:#cbd5e1;font-size:15px}
 
+#leaderboard{margin-top:20px}
+
 .shake{animation:shake .25s}
 @keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-6px)}100%{transform:translateX(0)}}
 .flashWrong{background:#7f1d1d}
 </style>
 </head>
 <body>
+
+<div id="loginScreen">
+<div class="loginBox">
+<h2>Alphabet Trainer</h2>
+<input id="userName" placeholder="Username">
+<input id="userPass" type="password" placeholder="Password">
+<button onclick="loginUser()">LOGIN / REGISTER</button>
+<div id="loginMsg"></div>
+</div>
+</div>
+
 <div id="game">
 <h1>Alphabet Championship Trainer</h1>
 
-<div class="modeBar" id="modeBar">
+<div class="modeBar">
 <button class="modeBtn active" onclick="setMode('pos',this)">Position</button>
 <button class="modeBtn" onclick="setMode('pair',this)">Pair</button>
 <button class="modeBtn" onclick="setMode('math',this)">Math</button>
@@ -63,9 +81,53 @@ button.quit{padding:10px 20px;font-size:14px;margin-left:10px;border-radius:10px
 <div class="row stats" id="stats"></div>
 <div class="row report" id="report"></div>
 <div class="row dashboard" id="dash"></div>
+
+<div id="leaderboard"></div>
 </div>
 
 <script>
+let CURRENT_USER=null
+
+function loginUser(){
+let u=userName.value.trim()
+let p=userPass.value.trim()
+
+if(!u||!p){loginMsg.innerText="Enter details";return}
+
+let db=JSON.parse(localStorage.getItem("alphabet_users")||"{}")
+
+if(!db[u]){
+db[u]={password:p,bestScore:0}
+localStorage.setItem("alphabet_users",JSON.stringify(db))
+}
+
+if(db[u].password!==p){loginMsg.innerText="Wrong password";return}
+
+CURRENT_USER=u
+loginScreen.style.display="none"
+renderLeaderboard()
+}
+
+function saveScore(sc){
+if(!CURRENT_USER) return
+let db=JSON.parse(localStorage.getItem("alphabet_users")||"{}")
+if(sc > (db[CURRENT_USER].bestScore||0)){
+db[CURRENT_USER].bestScore=sc
+localStorage.setItem("alphabet_users",JSON.stringify(db))
+}
+renderLeaderboard()
+}
+
+function renderLeaderboard(){
+let db=JSON.parse(localStorage.getItem("alphabet_users")||"{}")
+let arr=Object.entries(db).sort((a,b)=>b[1].bestScore-a[1].bestScore)
+let html="<h3>Leaderboard</h3>"
+arr.forEach(([n,d],i)=>{html+=`${i+1}. ${n} — ${d.bestScore}<br>`})
+leaderboard.innerHTML=html
+}
+
+/* ===== GAME ENGINE ===== */
+
 const AZ="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 let order=[]
 let i=0
@@ -85,10 +147,7 @@ let startTime=0
 let letterStart=0
 
 function lockModes(lock){
-document.querySelectorAll('.modeBtn').forEach(b=>{
-if(lock){b.classList.add('locked')}
-else{b.classList.remove('locked')}
-})
+document.querySelectorAll('.modeBtn').forEach(b=>lock?b.classList.add('locked'):b.classList.remove('locked'))
 }
 
 function setMode(m,el){
@@ -102,16 +161,11 @@ el.classList.add('active')
 
 function shuffle(a){
 let arr=[...a]
-for(let j=arr.length-1;j>0;j--){
-let k=Math.floor(Math.random()*(j+1))
-;[arr[j],arr[k]]=[arr[k],arr[j]]
-}
+for(let j=arr.length-1;j>0;j--){let k=Math.floor(Math.random()*(j+1));[arr[j],arr[k]]=[arr[k],arr[j]]}
 return arr
 }
 
-function buildOrder(){
-return shuffle(AZ)
-}
+function buildOrder(){return shuffle(AZ)}
 
 function pickMode(){
 if(gameMode!=="mixed") return gameMode
@@ -122,11 +176,10 @@ return "math"
 }
 
 function showIndicator(m){
-let el=document.getElementById("indicator")
-el.className="indicator "+m
-if(m==="pos") el.innerText="🔢 POSITION"
-if(m==="pair") el.innerText="🔁 PAIR"
-if(m==="math") el.innerText="➕ MATH"
+indicator.className="indicator "+m
+if(m==="pos") indicator.innerText="🔢 POSITION"
+if(m==="pair") indicator.innerText="🔁 PAIR"
+if(m==="math") indicator.innerText="➕ MATH"
 }
 
 function startGame(){
@@ -141,65 +194,39 @@ totalAttempts=0
 correctFirst=0
 
 lockModes(true)
-
-document.getElementById("startBtn").style.display="none"
-document.getElementById("quitBtn").style.display="inline-block"
+startBtn.style.display="none"
+quitBtn.style.display="inline-block"
 
 startTime=performance.now()
-
-let inp=document.getElementById("answer")
-inp.disabled=false
-inp.value=""
-inp.focus()
+answer.disabled=false
+answer.value=""
+answer.focus()
 
 nextQ()
 }
 
 function quitGame(){
 playing=false
-order=[]
-
 lockModes(false)
-
-document.getElementById("indicator").innerText="GAME TERMINATED"
-document.getElementById("q").innerText="-"
-document.getElementById("answer").disabled=true
-
-document.getElementById("startBtn").style.display="inline-block"
-document.getElementById("quitBtn").style.display="none"
-
-// clear stats
-combo=0
-score=0
-slowMap={}
-document.getElementById("combo").innerText=""
-document.getElementById("stats").innerText=""
-document.getElementById("report").innerText=""
-document.getElementById("dash").innerText=""
-document.getElementById("fill").style.width="0%"
+indicator.innerText="GAME TERMINATED"
+q.innerText="-"
+answer.disabled=true
+startBtn.style.display="inline-block"
+quitBtn.style.display="none"
+fill.style.width="0%"
 }
 
 function nextQ(){
 let mode=pickMode()
 showIndicator(mode)
-
 triesCurrent=0
 letterStart=performance.now()
 
 let L=order[i]
 let pos=AZ.indexOf(L)+1
-let q=document.getElementById("q")
 
-if(mode==="pos"){
-q.innerText=L
-correctAns=String(pos)
-}
-
-if(mode==="pair"){
-q.innerText=L
-correctAns=AZ[26-pos]
-}
-
+if(mode==="pos"){q.innerText=L;correctAns=String(pos)}
+if(mode==="pair"){q.innerText=L;correctAns=AZ[26-pos]}
 if(mode==="math"){
 let shift=Math.floor(Math.random()*9)+1
 let sign=Math.random()>0.5?1:-1
@@ -208,25 +235,21 @@ q.innerText=`${L} ${s>0?'+':'-'} ${Math.abs(s)}`
 let newPos=((pos+s-1)%26+26)%26
 correctAns=AZ[newPos]
 }
-
 updateUI()
 }
 
 function updateUI(){
-document.getElementById("fill").style.width=(i/26*100)+"%"
-
+fill.style.width=(i/26*100)+"%"
 let acc=totalAttempts?((i/totalAttempts)*100).toFixed(1):100
 let fAcc=i?((correctFirst/i)*100).toFixed(1):100
 
-let rank=""
+let rank="🙂 TRAINING"
 if(score>2200) rank="🏆 LEGEND"
 else if(score>1700) rank="🔥 MASTER"
 else if(score>1200) rank="⭐ PRO"
-else rank="🙂 TRAINING"
 
-
-document.getElementById("stats").innerText=`Score ${score} | Acc ${acc}% | First ${fAcc}% | ${rank}`
-document.getElementById("combo").innerText=combo?`⚡ Combo x${combo}`:""
+stats.innerText=`Score ${score} | Acc ${acc}% | First ${fAcc}% | ${rank}`
+combo.innerText=combo?`⚡ Combo x${combo}`:""
 }
 
 function finish(){
@@ -236,18 +259,17 @@ lockModes(false)
 let totalTime=((performance.now()-startTime)/1000).toFixed(2)
 let avg=(Object.values(slowMap).reduce((a,b)=>a+b,0)/26/1000).toFixed(2)
 
+indicator.innerText="SESSION COMPLETE"
+report.innerText=`Max Combo ${maxCombo}`
+dash.innerText=`Time ${totalTime}s | Avg RT ${avg}s`
 
-document.getElementById("indicator").innerText="SESSION COMPLETE"
-document.getElementById("report").innerText=`Max Combo ${maxCombo}`
-document.getElementById("dash").innerText=`Time ${totalTime}s | Avg RT ${avg}s`
+startBtn.style.display="inline-block"
+quitBtn.style.display="none"
 
-
-document.getElementById("startBtn").style.display="inline-block"
-document.getElementById("quitBtn").style.display="none"
+saveScore(score)
 }
 
-
-document.getElementById("answer").addEventListener("keydown",e=>{
+answer.addEventListener("keydown",e=>{
 if(e.key!=="Enter"||!playing) return
 
 let val=e.target.value.trim().toUpperCase()
@@ -275,7 +297,6 @@ nextQ()
 
 }else{
 combo=0
-let q=document.getElementById("q")
 q.classList.add("shake")
 document.body.classList.add("flashWrong")
 setTimeout(()=>{q.classList.remove("shake");document.body.classList.remove("flashWrong")},200)
